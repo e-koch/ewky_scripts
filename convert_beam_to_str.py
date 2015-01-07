@@ -36,7 +36,6 @@ def convert_angular(filename, beam):
     primary.header["COMMENT"] = "1 - signal map (weighted, extension 4 in original)"
     primary.header["COMMENT"] = "2 - error map (extension 1 in original)"
 
-
     # Remove .fits
     filename = filename[:-5]
 
@@ -47,7 +46,7 @@ def convert_angular(filename, beam):
 
 
 def convert_func(arr, beam):
-    factor = (2*np.pi / 8*np.log(2)) * (beam**2).to(u.sr)
+    factor = (2*np.pi / (8*np.log(2))) * (beam**2).to(u.sr)
 
     return arr / factor
 
