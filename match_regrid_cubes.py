@@ -14,7 +14,7 @@ from spectral_cube.wcs_utils import drop_axis
 
 
 def match_regrid(filename1, filename2, return_type='hdu', reappend_dim=True,
-                 remove_hist=True):
+                 remove_hist=True, save_output=False, save_name='new_img'):
     '''
     Input two fits filenames. The output will be the projection of file 1
     onto file 2
@@ -104,4 +104,9 @@ def match_regrid(filename1, filename2, return_type='hdu', reappend_dim=True,
     # hdr2["BMIN"] = hdr1["BMIN"]
     # hdr2["BPA"] = hdr1["BPA"]
 
-    return fits.PrimaryHDU(regrid_img, header=hdr2)
+    if save_output:
+        hdu = fits.PrimaryHDU(regrid_img, header=hdr2)
+        hdu.writeto(save_name+".fits")
+
+    else:
+        return fits.PrimaryHDU(regrid_img, header=hdr2)
