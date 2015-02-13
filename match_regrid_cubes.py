@@ -110,3 +110,13 @@ def match_regrid(filename1, filename2, return_type='hdu', reappend_dim=True,
 
     else:
         return fits.PrimaryHDU(regrid_img, header=hdr2)
+
+
+if __name__ == '__main__':
+
+    import sys
+
+    file1 = str(sys.argv[1])
+    file2 = str(sys.argv[2])
+
+    match_regrid(file1, file2, save_output=True, save_name='M33_vla_mask.fits')
