@@ -1,5 +1,6 @@
 
 from astropy import units as u
+from astropy.constants import c
 import numpy as np
 
 
@@ -28,3 +29,32 @@ def test_opt_to_rad():
 
     np.testing.assert_almost_equal(rad_vel.value,
                                    optical_to_radio(opt_vel, freq, rest).value)
+
+
+def direct_radio_to_optical(velocity):
+    try:
+        velocity.units
+        unit_flag = True
+    except AttributeError:
+        unit_flag = False
+
+    if unit_flag:
+        return (c * velocity) / (c - velocity)
+
+    else:
+        return (c.value * velocity) / (c.value - velocity)
+
+
+def direct_optical_to_radio(velocity):
+    try:
+        velocity.units
+        unit_flag = True
+    except AttributeError:
+        unit_flag = False
+
+    if unit_flag:
+        return (c * velocity) / (c + velocity)
+
+    else:
+        return (c.value * velocity) / (c.value + velocity)
+
