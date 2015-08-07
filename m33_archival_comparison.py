@@ -5,9 +5,11 @@ Create comparison figure of archival VLA M33 data
 
 from spectral_cube import SpectralCube
 from signal_id import Noise, RadioMask
+from radio_beam import Beam
 import aplpy
 from matplotlib import pyplot as p
 from astropy import units as u
+from astropy.io import fits
 
 # Load in the cubes
 cube = SpectralCube.read("M33_206_b_c_HI.fits")
@@ -41,3 +43,33 @@ sub2.hide_yaxis_label()
 chan_fig.tight_layout()
 
 raw_input("Continue?")
+
+# Now create good masks and derive 0th moments.
+
+
+new_beam = Beam.from_fits_header(cube.header)
+noise_cube = Noise(cube, beam=new_beam)
+
+new_noise = noise_cube.scale
+
+cube_masked = cube.with_mask(cube > new_noise*u.Jy)
+
+old_beam = Beam.from_fits_header(old_cube.header)
+old_noise_cube = Noise(old_cube, beam=old_beam)
+
+old_noise = old_noise_cube.scale
+
+old_cube_masked = old_cube.with_mask(old_cube > old_noise*u.Jy)
+
+# Load in the broad clean mask used
+clean_mask = fits.getdata("../../../Arecibo/M33_newmask.fits")
+
+# Need to match the dims
+clean_mask = clean_mask.squeeze()
+clean_mask = clean_mask[11:195, ::-1, ::-1]
+clean_mask = clean_mask[:, 595:3504, 1065:3033]
+
+mask = RadioMask(cube_masked)
+mask.intersection(clean_mask)
+mask.remove_small_regions()
+
