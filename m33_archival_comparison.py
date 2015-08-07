@@ -73,3 +73,8 @@ mask = RadioMask(cube_masked)
 mask.intersection(clean_mask)
 mask.remove_small_regions()
 
+ old_arecibo_mask = fits.getdata("../old_imaging/M33_arecibo_mask_old_AT0206.fits")
+
+old_mask = RadioMask(old_cube_masked)
+old_mask.intersection()
+old_mask.remove_small_regions()
