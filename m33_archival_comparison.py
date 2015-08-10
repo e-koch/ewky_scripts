@@ -71,7 +71,10 @@ clean_mask = clean_mask[:, 595:3504, 1065:3033]
 
 mask = RadioMask(cube_masked)
 mask.intersection(clean_mask)
-mask.remove_small_regions()
+# mask.remove_small_regions()
+mask.open(iterations=3)
+mask.close(iterations=3)
+mask.dilate(iterations=6)
 
  old_arecibo_mask = fits.getdata("../old_imaging/M33_arecibo_mask_old_AT0206.fits")
 
