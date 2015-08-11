@@ -100,11 +100,35 @@ class MultiResObs(object):
 
         return self
 
-    def convert_to(self, unit=u.K):
+    def convert_to(self, unit=u.K, freq=1420.40575177*u.MHz):
         '''
         Convert both sets to common brightness units.
         '''
-        pass
+
+        convert_high = unit == self.highres.unit
+        convert_low = unit == self.lowres.unit
+
+        high_unit = self.highres.unit
+        low_unit = self.lowres.unit
+
+        if unit == u.K:
+
+            if convert_high and 'Jy' in high_unit.name:
+
+                jtok = u.brightness_temperature(self.highbeam.sr, freq)
+
+                self.highres = \
+                    self.highres.to(unit, jtok)
+
+            if convert_low and 'Jy' in low_unit.name:
+
+                jtok = u.brightness_temperature(self.lowbeam.sr, freq)
+
+                self.lowres = \
+                    self.lowres.to(unit, jtok)
+        else:
+            raise NotImplementedError("Only supporting Jy/beam -> K right now.")
+
 
     def convolve_to_low(self):
         '''
