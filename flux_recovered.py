@@ -22,8 +22,8 @@ class MultiResObs(object):
         self.highres = SpectralCube.read(highres)
         self.lowres = SpectralCube.read(lowres)
 
-        self.lowbeam = Beam.from_fits_header(self.lowres.header)
-        self.highbeam = Beam.from_fits_header(self.highres.header)
+        self.lowbeam = self.lowres.beam
+        self.highbeam = self.highres.beam
 
         self.combined_beam = self.lowbeam.convolve(self.highbeam)
 
