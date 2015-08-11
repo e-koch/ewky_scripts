@@ -115,26 +115,22 @@ class MultiResObs(object):
 
             if convert_high and 'Jy' in high_unit.name:
 
-                jtok = u.brightness_temperature(self.highbeam.sr, freq)
-
                 self.highres = \
-                    self.highres.to(unit, jtok)
+                    self.highres.to(unit, self.highbeam.jtok_equiv(freq))
 
             if convert_low and 'Jy' in low_unit.name:
 
-                jtok = u.brightness_temperature(self.lowbeam.sr, freq)
-
                 self.lowres = \
-                    self.lowres.to(unit, jtok)
+                    self.lowres.to(unit, self.lowbeam.jtok_equiv(freq))
         else:
             raise NotImplementedError("Only supporting Jy/beam -> K right now.")
 
-
-    def convolve_to_low(self):
+    def convolve_to_common(self):
         '''
-        Convolve highres to resolution of lowres.
+        Convolve cubes to a common resolution using the combined beam.
         '''
         pass
+
 
     def flux_recovered(self):
         pass
