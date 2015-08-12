@@ -118,8 +118,8 @@ class MultiResObs(object):
         Convert both sets to common brightness units.
         '''
 
-        convert_high = unit == self.highres.unit
-        convert_low = unit == self.lowres.unit
+        convert_high = unit != self.highres.unit
+        convert_low = unit != self.lowres.unit
 
         high_unit = self.highres.unit
         low_unit = self.lowres.unit
