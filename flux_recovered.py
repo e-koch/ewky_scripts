@@ -100,9 +100,6 @@ class MultiResObs(object):
 
         # Now match the spectral extends
 
-        print self.highres.spectral_extrema
-        print self.lowres.spectral_extrema
-
         low_spec = \
             self.highres.spectral_extrema[0] if \
             self.highres.spectral_extrema[0] > self.lowres.spectral_extrema[0]\
