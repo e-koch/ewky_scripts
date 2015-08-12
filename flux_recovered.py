@@ -51,43 +51,57 @@ class MultiResObs(object):
         # Determine which cube should be slice down so both have the same
         # spatial coverage.
 
-        all_extrema = []
+        limits_high = []
+        limits_low = []
 
-        long_slice = self.lowres.longitude_extrema > self.highres.longitude_extrema
+        low_long = self.lowres.longitude_extrema
+        high_long = self.highres.longitude_extrema
 
-        if long_slice[0]:
-            all_extrema.append(self.highres.longitude_extrema[0])
+        low_lat = self.lowres.latitude_extrema
+        high_lat = self.highres.latitude_extrema
+
+        if low_long[0] < high_long[0]:
+            limits_low.append(high_long[0])
+            limits_high.append("min")
         else:
-            all_extrema.append(self.lowres.longitude_extrema[0])
+            limits_high.append(low_long[0])
+            limits_low.append("min")
 
-        if long_slice[1]:
-            all_extrema.append(self.highres.longitude_extrema[1])
+        if low_long[1] > high_long[1]:
+            limits_low.append(high_long[1])
+            limits_high.append("max")
         else:
-            all_extrema.append(self.lowres.longitude_extrema[1])
+            limits_high.append(low_long[0])
+            limits_low.append("min")
 
-        lat_slice = self.lowres.latitude_extrema > self.highres.latitude_extrema
-
-        if lat_slice[0]:
-            all_extrema.append(self.highres.latitude_extrema[1])
+        if low_lat[1] > high_lat[1]:
+            limits_low.append(high_lat[1])
+            limits_high.append("min")
         else:
-            all_extrema.append(self.lowres.latitude_extrema[1])
+            limits_high.append(low_lat[0])
+            limits_low.append("min")
 
-        if lat_slice[1]:
-            all_extrema.append(self.highres.latitude_extrema[0])
+        if low_lat[0] < high_lat[0]:
+            limits_low.append(high_lat[0])
+            limits_high.append("max")
         else:
-            all_extrema.append(self.lowres.latitude_extrema[0])
+            limits_high.append(low_lat[0])
+            limits_low.append("max")
 
         # Apply common slicing to both
 
         self.highres = \
-            self.highres.subcube(xlo=all_extrema[0], xhi=all_extrema[1],
-                                 ylo=all_extrema[2], yhi=all_extrema[3])
+            self.highres.subcube(xlo=limits_high[0], xhi=limits_high[1],
+                                 ylo=limits_high[2], yhi=limits_high[3])
 
         self.lowres = \
-            self.lowres.subcube(xlo=all_extrema[0], xhi=all_extrema[1],
-                                ylo=all_extrema[2], yhi=all_extrema[3])
+            self.lowres.subcube(xlo=limits_low[0], xhi=limits_low[1],
+                                ylo=limits_low[2], yhi=limits_low[3])
 
         # Now match the spectral extends
+
+        print self.highres.spectral_extrema
+        print self.lowres.spectral_extrema
 
         low_spec = \
             self.highres.spectral_extrema[0] if \
@@ -101,8 +115,6 @@ class MultiResObs(object):
 
         self.highres = self.highres.spectral_slab(low_spec, high_spec)
         self.lowres = self.lowres.spectral_slab(low_spec, high_spec)
-
-        return self
 
     def convert_to(self, unit=u.K, freq=1420.40575177*u.MHz):
         '''
