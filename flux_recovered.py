@@ -149,7 +149,7 @@ class MultiResObs(object):
         if lowres_mask is not None:
             self.lowres = self.lowres.with_mask(lowres_mask)
 
-    def convolve_to_common(self):
+    def convolve_to_common(self, verbose=False):
         '''
         Convolve cubes to a common resolution using the combined beam.
         '''
@@ -162,7 +162,12 @@ class MultiResObs(object):
 
         high_chans = len(self.highres.spectral_axis)
 
+        if verbose:
+            print("Convolving high resolution cube.")
+
         for chan in range(high_chans):
+            if verbose:
+                print("On Channel: "+str(chan)+" of "+str(high_chans))
             highres_convolved[chan, :, :] = \
                 convolve(self.highres.filled_data[chan, :, :],
                          conv_kernel_high)
@@ -187,7 +192,13 @@ class MultiResObs(object):
 
         low_chans = len(self.lowres.spectral_axis)
 
+        if verbose:
+            print("Convolving low resolution cube.")
+
         for chan in range(low_chans):
+            if verbose:
+                print("On Channel: "+str(chan)+" of "+str(low_chans))
+
             lowres_convolved[chan, :, :] = \
                 convolve(self.lowres.filled_data[chan, :, :],
                          conv_kernel_low)
