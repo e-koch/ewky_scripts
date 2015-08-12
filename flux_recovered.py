@@ -10,6 +10,7 @@ from astropy.convolution import convolve
 from astropy import units as u
 from astropy import wcs
 from FITS_tools.header_tools import wcs_to_platescale
+import matplotlib.pyplot as p
 
 
 class MultiResObs(object):
@@ -210,8 +211,43 @@ class MultiResObs(object):
             SpectralCube(lowres_convolved, self.lowres.wcs,
                          header=update_low_hdr)
 
-    def flux_recovered(self):
-        pass
+    def flux_recovered(self, plot=True, filename=None):
+        '''
+        Check the amount of flux recovered in the high resolution image versus
+        the low resolution data.
+        '''
+
+        # Add up the total intensity in the cubes and compare
+        # Assumes that there is some masking such that noise
+        # doesn't dominate
+
+        if self.highres_convolved is not None:
+            self.high_channel_intensity = self.highres_convolved.sum(axis=(1,2))
+        else:
+            raise Warning("Must run convolve_to_common before.")
+
+        if self.lowres_convolved is not None:
+            self.low_channel_intensity = self.lowres_convolved.sum(axis=(1,2))
+        else:
+            raise Warning("Must run convolve_to_common before.")
+
+        self.fraction_flux_recovered = \
+            self.high_channel_intensity.sum()/self.low_channel_intensity.sum()
+
+        if plot:
+            p.plot(self.highres.velocity_axis.value,
+                   self.high_channel_intensity.value)
+
+            p.plot(self.lowres.velocity_axis.value,
+                   self.low_channel_intensity.value)
+
+            p.xlabel(self.highres.spectral_axis.unit.to_string())
+            p.ylabel(self.highres.unit.to_string())
+
+            if filename is None:
+                p.show()
+            else:
+                p.savefig(filename)
 
 
 def _update_beam_in_hdr(hdr, beam):
