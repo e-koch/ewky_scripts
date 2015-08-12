@@ -9,6 +9,7 @@ from radio_beam import Beam
 from astropy.convolution import convolve
 from astropy import units as u
 from astropy import wcs
+from FITS_tools.header_tools import wcs_to_platescale
 
 
 class MultiResObs(object):
@@ -21,6 +22,9 @@ class MultiResObs(object):
         super(MultiResObs, self).__init__()
         self.highres = SpectralCube.read(highres)
         self.lowres = SpectralCube.read(lowres)
+
+        self.highres_convolved = None
+        self.lowres_convolved = None
 
         self.lowbeam = self.lowres.beam
         self.highbeam = self.highres.beam
@@ -140,8 +144,58 @@ class MultiResObs(object):
         '''
         Convolve cubes to a common resolution using the combined beam.
         '''
-        pass
 
+        # Create convolution kernels from the combined beam
+        conv_kernel_high = \
+            self.combined_beam.as_kernel(wcs_to_platescale(self.highres.wcs))
+
+        highres_convolved = np.empty(self.highres.shape)
+
+        high_chans = len(self.highres.spectral_axis)
+
+        for chan in range(high_chans):
+            highres_convolved[chan, :, :] = \
+                convolve(self.highres.filled_data[chan, :, :],
+                         conv_kernel_high)
+
+        update_high_hdr = \
+            _update_beam_in_hdr(self.highres.header, self.combined_beam)
+
+        self.highres_convolved = \
+            SpectralCube(highres_convolved, self.highres.wcs,
+                         header=update_high_hdr)
+
+        # Cleanup a bit
+
+        del highres_convolved
+
+        # Now the low resolution data
+
+        conv_kernel_low = \
+            self.combined_beam.as_kernel(wcs_to_platescale(self.lowres.wcs))
+
+        lowres_convolved = np.empty(self.lowres.shape)
+
+        low_chans = len(self.lowres.spectral_axis)
+
+        for chan in range(low_chans):
+            lowres_convolved[chan, :, :] = \
+                convolve(self.lowres.filled_data[chan, :, :],
+                         conv_kernel_low)
+
+        update_low_hdr = \
+            _update_beam_in_hdr(self.lowres.header, self.combined_beam)
+
+        self.lowres_convolved = \
+            SpectralCube(lowres_convolved, self.lowres.wcs,
+                         header=update_low_hdr)
 
     def flux_recovered(self):
         pass
+
+
+def _update_beam_in_hdr(hdr, beam):
+    hdr["BMAJ"] = beam.major
+    hdr["BMIN"] = beam.minor
+    hdr["BPA"] = beam.pa
+    return hdr
