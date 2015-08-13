@@ -232,7 +232,7 @@ class MultiResObs(object):
         if self.lowres_convolved is not None:
             self.low_channel_intensity = self.lowres_convolved.sum(axis=(1, 2))
         else:
-            self.high_channel_intensity = self.lowres.sum(axis=(1, 2))
+            self.low_channel_intensity = self.lowres.sum(axis=(1, 2))
             Warning("Should run convolve_to_common before. Using unconvolved"
                     " cube.")
 
