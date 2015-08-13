@@ -222,14 +222,19 @@ class MultiResObs(object):
         # doesn't dominate
 
         if self.highres_convolved is not None:
-            self.high_channel_intensity = self.highres_convolved.sum(axis=(1,2))
+            self.high_channel_intensity = \
+                self.highres_convolved.sum(axis=(1, 2))
         else:
-            raise Warning("Must run convolve_to_common before.")
+            self.high_channel_intensity = self.highres.sum(axis=(1, 2))
+            Warning("Should run convolve_to_common before. Using unconvolved"
+                    " cube.")
 
         if self.lowres_convolved is not None:
-            self.low_channel_intensity = self.lowres_convolved.sum(axis=(1,2))
+            self.low_channel_intensity = self.lowres_convolved.sum(axis=(1, 2))
         else:
-            raise Warning("Must run convolve_to_common before.")
+            self.high_channel_intensity = self.lowres.sum(axis=(1, 2))
+            Warning("Should run convolve_to_common before. Using unconvolved"
+                    " cube.")
 
         self.fraction_flux_recovered = \
             self.high_channel_intensity.sum()/self.low_channel_intensity.sum()
