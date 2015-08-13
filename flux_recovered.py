@@ -246,8 +246,8 @@ class MultiResObs(object):
             p.plot(self.lowres.spectral_axis.value,
                    self.low_channel_intensity.value)
 
-            p.xlabel(self.highres.spectral_axis.unit.to_string())
-            p.ylabel(self.highres.unit.to_string())
+            p.xlabel("Spectral Axis (+"self.highres.spectral_axis.unit.to_string()+")")
+            p.ylabel("Intensity ("+self.highres.unit.to_string()+")")
 
             if filename is None:
                 p.show()
