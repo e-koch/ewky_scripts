@@ -240,10 +240,10 @@ class MultiResObs(object):
             self.high_channel_intensity.sum()/self.low_channel_intensity.sum()
 
         if plot:
-            p.plot(self.highres.velocity_axis.value,
+            p.plot(self.highres.spectral_axis.value,
                    self.high_channel_intensity.value)
 
-            p.plot(self.lowres.velocity_axis.value,
+            p.plot(self.lowres.spectral_axis.value,
                    self.low_channel_intensity.value)
 
             p.xlabel(self.highres.spectral_axis.unit.to_string())
