@@ -6,11 +6,12 @@ Find the amount of emission recovered in a high-resolution map, based on a low-r
 from spectral_cube import SpectralCube
 import numpy as np
 from radio_beam import Beam
-from astropy.convolution import convolve
+from astropy.convolution import convolve_fft
 from astropy import units as u
 from astropy import wcs
 from FITS_tools.header_tools import wcs_to_platescale
 import matplotlib.pyplot as p
+import dask.array as da
 
 
 class MultiResObs(object):
@@ -150,7 +151,8 @@ class MultiResObs(object):
         if lowres_mask is not None:
             self.lowres = self.lowres.with_mask(lowres_mask)
 
-    def convolve_to_common(self, verbose=False):
+    def convolve_to_common(self, verbose=False, use_dask=True,
+                           twod_block=(256, 256)):
         '''
         Convolve cubes to a common resolution using the combined beam.
         '''
@@ -158,6 +160,8 @@ class MultiResObs(object):
         # Create convolution kernels from the combined beam
         conv_kernel_high = \
             self.combined_beam.as_kernel(wcs_to_platescale(self.highres.wcs))
+
+        high_pad = np.ceil(conv_kernel_high.shape[0] / 2).astype(int)
 
         highres_convolved = np.empty(self.highres.shape)
 
@@ -169,9 +173,30 @@ class MultiResObs(object):
         for chan in range(high_chans):
             if verbose:
                 print("On Channel: "+str(chan)+" of "+str(high_chans))
-            highres_convolved[chan, :, :] = \
-                convolve(self.highres.filled_data[chan, :, :],
-                         conv_kernel_high)
+
+            if use_dask:
+                da_arr = \
+                    da.from_array(np.pad(self.highres.filled_data[chan, :, :],
+                                         high_pad, padwithnans),
+                                  chunks=twod_block)
+
+                highres_convolved[chan, high_pad:-high_pad,
+                                  high_pad:-high_pad] = \
+                    da_arr.map_overlap(
+                        lambda a:
+                            convolve_fft(a,
+                                         conv_kernel_high,
+                                         boundary='fill',
+                                         interpolate_nan=True,
+                                         normalize_kernel=True),
+                        depth=2*high_pad,
+                        boundary=np.nan).compute()
+
+            else:
+                highres_convolved[chan, :, :] = \
+                    convolve_fft(self.highres.filled_data[chan, :, :],
+                                 conv_kernel_high, boundary='fill',
+                                 interpolate_nan=True, normalize_kernel=True)
 
         update_high_hdr = \
             _update_beam_in_hdr(self.highres.header, self.combined_beam)
@@ -246,7 +271,7 @@ class MultiResObs(object):
             p.plot(self.lowres.spectral_axis.value,
                    self.low_channel_intensity.value)
 
-            p.xlabel("Spectral Axis (+"self.highres.spectral_axis.unit.to_string()+")")
+            p.xlabel("Spectral Axis (+"+self.highres.spectral_axis.unit.to_string()+")")
             p.ylabel("Intensity ("+self.highres.unit.to_string()+")")
 
             if filename is None:
@@ -260,3 +285,9 @@ def _update_beam_in_hdr(hdr, beam):
     hdr["BMIN"] = beam.minor
     hdr["BPA"] = beam.pa
     return hdr
+
+
+def padwithnans(vector, pad_width, iaxis, kwargs):
+    vector[:pad_width[0]] = np.nan
+    vector[-pad_width[1]:] = np.nan
+    return vector
