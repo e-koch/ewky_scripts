@@ -197,12 +197,11 @@ class MultiResObs(object):
                     convolve_fft(self.highres.filled_data[chan, :, :],
                                  conv_kernel_high, boundary='fill',
                                  interpolate_nan=True, normalize_kernel=True)
-
         update_high_hdr = \
             _update_beam_in_hdr(self.highres.header, self.combined_beam)
 
         self.highres_convolved = \
-            SpectralCube(highres_convolved, self.highres.wcs,
+            SpectralCube(highres_convolved*self.highres.unit, self.highres.wcs,
                          header=update_high_hdr)
 
         # Cleanup a bit
@@ -226,14 +225,15 @@ class MultiResObs(object):
                 print("On Channel: "+str(chan)+" of "+str(low_chans))
 
             lowres_convolved[chan, :, :] = \
-                convolve(self.lowres.filled_data[chan, :, :],
-                         conv_kernel_low)
+                convolve_fft(self.lowres.filled_data[chan, :, :],
+                             conv_kernel_low, boundary='fill',
+                             interpolate_nan=True, normalize_kernel=True)
 
         update_low_hdr = \
             _update_beam_in_hdr(self.lowres.header, self.combined_beam)
 
         self.lowres_convolved = \
-            SpectralCube(lowres_convolved, self.lowres.wcs,
+            SpectralCube(lowres_convolved*self.lowres.unit, self.lowres.wcs,
                          header=update_low_hdr)
 
     def flux_recovered(self, plot=True, filename=None):
@@ -281,9 +281,9 @@ class MultiResObs(object):
 
 
 def _update_beam_in_hdr(hdr, beam):
-    hdr["BMAJ"] = beam.major
-    hdr["BMIN"] = beam.minor
-    hdr["BPA"] = beam.pa
+    hdr["BMAJ"] = beam.major.value
+    hdr["BMIN"] = beam.minor.value
+    hdr["BPA"] = beam.pa.value
     return hdr
 
 
