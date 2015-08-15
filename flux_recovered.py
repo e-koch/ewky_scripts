@@ -33,6 +33,17 @@ class MultiResObs(object):
 
         self.combined_beam = self.lowbeam.convolve(self.highbeam)
 
+    def apply_mask(self, highres_mask=None, lowres_mask=None):
+        '''
+        Apply a pre-made mask to either of the data cubes.
+        '''
+
+        if highres_mask is not None:
+            self.highres = self.highres.with_mask(highres_mask)
+
+        if lowres_mask is not None:
+            self.lowres = self.lowres.with_mask(lowres_mask)
+
     def match_coords(self):
         '''
         Match the spatial and spectral coordinates of the cubes.
@@ -139,17 +150,6 @@ class MultiResObs(object):
                     self.lowres.to(unit, self.lowbeam.jtok_equiv(freq))
         else:
             raise NotImplementedError("Only supporting Jy/beam -> K right now.")
-
-    def apply_mask(self, highres_mask=None, lowres_mask=None):
-        '''
-        Apply a pre-made mask to either of the data cubes.
-        '''
-
-        if highres_mask is not None:
-            self.highres = self.highres.with_mask(highres_mask)
-
-        if lowres_mask is not None:
-            self.lowres = self.lowres.with_mask(lowres_mask)
 
     def convolve_to_common(self, verbose=False, use_dask=True,
                            twod_block=(256, 256)):
