@@ -308,3 +308,26 @@ def padwithnans(vector, pad_width, iaxis, kwargs):
     vector[:pad_width[0]] = np.nan
     vector[-pad_width[1]:] = np.nan
     return vector
+
+
+def auto_dask_map(cube, blocks=None):
+    '''
+    Based on the dimensions of the given cube, and the dimensions
+    of the blocks, return an appropriate dask output.
+
+    Currently, this only supports 2D and 3D inputs. For 2D blocks,
+    an iterator is returned with 2D slices of the array. For 3D,
+    a single dask array is returned.
+    '''
+
+    if len(blocks) == 2:
+        return dask_slice_iterator(cube, blocks)
+
+    else:
+        return da.from_array(cube.filled_data[:], blocks=blocks)
+
+
+def dask_slice_iterator(cube, blocks):
+    for chan in range(len(spectral_axis)):
+        yield da.from_array(cube.filled_data[chan, :, :],
+                            blocks=blocks)
