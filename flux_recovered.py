@@ -181,6 +181,9 @@ class MultiResObs(object):
         if verbose:
             print("Convolving high resolution cube.")
 
+        if use_dask:
+            dask_output = auto_dask_map(self.highres, blocks=block)
+
         for chan in range(high_chans):
             if verbose:
                 print("On Channel: "+str(chan)+" of "+str(high_chans))
@@ -318,7 +321,8 @@ def padwithnans(vector, pad_width, iaxis, kwargs):
     return vector
 
 
-def auto_dask_map(cube, blocks=None):
+def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
+                  kwargs={}, output_array=None):
     '''
     Based on the dimensions of the given cube, and the dimensions
     of the blocks, return an appropriate dask output.
@@ -329,10 +333,27 @@ def auto_dask_map(cube, blocks=None):
     '''
 
     if len(blocks) == 2:
-        return dask_slice_iterator(cube, blocks)
+
+        if output_array is None:
+            output_array = np.empty(cube.shape)
+
+            def_slice = [slice(None)] * len(cube.shape)
+
+        ct = 0
+        for slice in dask_slice_iterator(cube, blocks):
+            def_slice[0] = slice(ct, ct+1)
+            output_array[def_slice] = \
+                slice.map_overlap(lambda a:
+                                  operation(a, *args, **kwargs)).compute()
 
     else:
-        return da.from_array(cube.filled_data[:], blocks=blocks)
+        dask_arr = da.from_array(cube.filled_data[:], blocks=blocks)
+
+        output_array = \
+            dask_arr.map_overlap(lambda a:
+                                 operation(a, *args, **kwargs)).compute()
+
+    return output_array
 
 
 def dask_slice_iterator(cube, blocks):
