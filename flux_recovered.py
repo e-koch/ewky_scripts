@@ -161,14 +161,16 @@ class MultiResObs(object):
         conv_kernel_high = \
             self.combined_beam.as_kernel(wcs_to_platescale(self.highres.wcs))
 
-        assert np.alltrue([bl > kern for bl, kern in
-                           zip(block, conv_kernel_high.shape)])
+        if use_dask:
+            assert np.alltrue([bl > kern for bl, kern in
+                               zip(block, conv_kernel_high.shape)])
 
         conv_kernel_low = \
             self.combined_beam.as_kernel(wcs_to_platescale(self.lowres.wcs))
 
-        assert np.alltrue([bl > kern for bl, kern in
-                           zip(block, conv_kernel_low.shape)])
+        if use_dask:
+            assert np.alltrue([bl > kern for bl, kern in
+                               zip(block, conv_kernel_low.shape)])
 
         high_pad = np.ceil(conv_kernel_high.shape[0] / 2).astype(int)
 
