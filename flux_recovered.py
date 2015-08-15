@@ -279,6 +279,23 @@ class MultiResObs(object):
             else:
                 p.savefig(filename)
 
+        def run_all(self, highres_mask=None, lowres_mask=None, plot=True,
+                    unit=u.K, freq=1420.40575177*u.MHz, filename=True,
+                    use_dask=False, verbose=True):
+            '''
+            Run the complete comparisons.
+            '''
+
+            self.apply_mask(highres_mask=highres_mask, lowres_mask=lowres_mask)
+
+            self.match_coords()
+
+            self.convert_to(unit=unit, freq=freq)
+
+            self.convolve_to_common(verbose=verbose, use_dask=use_dask)
+
+            self.flux_recovered(plot=plot, filename=filename)
+
 
 def _update_beam_in_hdr(hdr, beam):
     hdr["BMAJ"] = beam.major.value
