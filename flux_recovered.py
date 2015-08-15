@@ -152,7 +152,7 @@ class MultiResObs(object):
             raise NotImplementedError("Only supporting Jy/beam -> K right now.")
 
     def convolve_to_common(self, verbose=False, use_dask=True,
-                           twod_block=(256, 256)):
+                           block=(256, 256)):
         '''
         Convolve cubes to a common resolution using the combined beam.
         '''
@@ -160,6 +160,15 @@ class MultiResObs(object):
         # Create convolution kernels from the combined beam
         conv_kernel_high = \
             self.combined_beam.as_kernel(wcs_to_platescale(self.highres.wcs))
+
+        assert np.alltrue([bl > kern for bl, kern in
+                           zip(block, conv_kernel_high.shape)])
+
+        conv_kernel_low = \
+            self.combined_beam.as_kernel(wcs_to_platescale(self.lowres.wcs))
+
+        assert np.alltrue([bl > kern for bl, kern in
+                           zip(block, conv_kernel_low.shape)])
 
         high_pad = np.ceil(conv_kernel_high.shape[0] / 2).astype(int)
 
@@ -178,7 +187,7 @@ class MultiResObs(object):
                 da_arr = \
                     da.from_array(np.pad(self.highres.filled_data[chan, :, :],
                                          high_pad, padwithnans),
-                                  chunks=twod_block)
+                                  chunks=block)
 
                 highres_convolved[chan, high_pad:-high_pad,
                                   high_pad:-high_pad] = \
@@ -209,9 +218,6 @@ class MultiResObs(object):
         del highres_convolved
 
         # Now the low resolution data
-
-        conv_kernel_low = \
-            self.combined_beam.as_kernel(wcs_to_platescale(self.lowres.wcs))
 
         lowres_convolved = np.empty(self.lowres.shape)
 
