@@ -182,7 +182,7 @@ class MultiResObs(object):
             print("Convolving high resolution cube.")
 
         if use_dask:
-            dask_output = auto_dask_map(self.highres, blocks=block)
+            highres_convolved = auto_dask_map(self.highres, blocks=block)
 
         # for chan in range(high_chans):
         #     if verbose:
@@ -231,14 +231,17 @@ class MultiResObs(object):
         if verbose:
             print("Convolving low resolution cube.")
 
-        for chan in range(low_chans):
-            if verbose:
-                print("On Channel: "+str(chan)+" of "+str(low_chans))
+        if use_dask:
+            lowres_convolved = auto_dask_map(self.highres, blocks=block)
 
-            lowres_convolved[chan, :, :] = \
-                convolve_fft(self.lowres.filled_data[chan, :, :],
-                             conv_kernel_low, boundary='fill',
-                             interpolate_nan=True, normalize_kernel=True)
+        # for chan in range(low_chans):
+        #     if verbose:
+        #         print("On Channel: "+str(chan)+" of "+str(low_chans))
+
+        #     lowres_convolved[chan, :, :] = \
+        #         convolve_fft(self.lowres.filled_data[chan, :, :],
+        #                      conv_kernel_low, boundary='fill',
+        #                      interpolate_nan=True, normalize_kernel=True)
 
         update_low_hdr = \
             _update_beam_in_hdr(self.lowres.header, self.combined_beam)
