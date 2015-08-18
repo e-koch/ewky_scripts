@@ -161,16 +161,16 @@ class MultiResObs(object):
         conv_kernel_high = \
             self.combined_beam.as_kernel(wcs_to_platescale(self.highres.wcs))
 
-        if use_dask:
-            assert np.alltrue([bl > kern for bl, kern in
-                               zip(block, conv_kernel_high.shape)])
+        # if use_dask:
+        #     assert np.alltrue([bl > kern for bl, kern in
+        #                        zip(block, conv_kernel_high.shape)])
 
         conv_kernel_low = \
             self.combined_beam.as_kernel(wcs_to_platescale(self.lowres.wcs))
 
-        if use_dask:
-            assert np.alltrue([bl > kern for bl, kern in
-                               zip(block, conv_kernel_low.shape)])
+        # if use_dask:
+        #     assert np.alltrue([bl > kern for bl, kern in
+        #                        zip(block, conv_kernel_low.shape)])
 
         high_pad = np.ceil(conv_kernel_high.shape[0] / 2).astype(int)
 
@@ -351,7 +351,7 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
                                   operation(a, *args, **kwargs)).compute()
 
     else:
-        dask_arr = da.from_array(cube.filled_data[:], blocks=blocks)
+        dask_arr = da.from_array(cube.filled_data[:], blocks)
 
         if verbose:
             print("No channel iterations, so no print out.")
@@ -366,4 +366,4 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
 def dask_slice_iterator(cube, blocks):
     for chan in range(len(cube.spectral_axis)):
         yield chan, da.from_array(cube.filled_data[chan, :, :],
-                                  blocks=blocks)
+                                  blocks)
