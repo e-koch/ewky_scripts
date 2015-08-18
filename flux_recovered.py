@@ -184,33 +184,33 @@ class MultiResObs(object):
         if use_dask:
             dask_output = auto_dask_map(self.highres, blocks=block)
 
-        for chan in range(high_chans):
-            if verbose:
-                print("On Channel: "+str(chan)+" of "+str(high_chans))
+        # for chan in range(high_chans):
+        #     if verbose:
+        #         print("On Channel: "+str(chan)+" of "+str(high_chans))
 
-            if use_dask:
-                da_arr = \
-                    da.from_array(np.pad(self.highres.filled_data[chan, :, :],
-                                         high_pad, padwithnans),
-                                  chunks=block)
+        #     if use_dask:
+        #         da_arr = \
+        #             da.from_array(np.pad(self.highres.filled_data[chan, :, :],
+        #                                  high_pad, padwithnans),
+        #                           chunks=block)
 
-                highres_convolved[chan, high_pad:-high_pad,
-                                  high_pad:-high_pad] = \
-                    da_arr.map_overlap(
-                        lambda a:
-                            convolve_fft(a,
-                                         conv_kernel_high,
-                                         boundary='fill',
-                                         interpolate_nan=True,
-                                         normalize_kernel=True),
-                        depth=2*high_pad,
-                        boundary=np.nan).compute()
+        #         highres_convolved[chan, high_pad:-high_pad,
+        #                           high_pad:-high_pad] = \
+        #             da_arr.map_overlap(
+        #                 lambda a:
+        #                     convolve_fft(a,
+        #                                  conv_kernel_high,
+        #                                  boundary='fill',
+        #                                  interpolate_nan=True,
+        #                                  normalize_kernel=True),
+        #                 depth=2*high_pad,
+        #                 boundary=np.nan).compute()
 
-            else:
-                highres_convolved[chan, :, :] = \
-                    convolve_fft(self.highres.filled_data[chan, :, :],
-                                 conv_kernel_high, boundary='fill',
-                                 interpolate_nan=True, normalize_kernel=True)
+        #     else:
+        #         highres_convolved[chan, :, :] = \
+        #             convolve_fft(self.highres.filled_data[chan, :, :],
+        #                          conv_kernel_high, boundary='fill',
+        #                          interpolate_nan=True, normalize_kernel=True)
         update_high_hdr = \
             _update_beam_in_hdr(self.highres.header, self.combined_beam)
 
@@ -354,7 +354,7 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
             print("No channel iterations, so no print out.")
 
         output_array = \
-            dask_arr.map_overlap(lambda a:
+            dask_arr.map_blocks(lambda a:
                                  operation(a, *args, **kwargs)).compute()
 
     return output_array
