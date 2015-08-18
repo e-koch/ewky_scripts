@@ -322,7 +322,7 @@ def padwithnans(vector, pad_width, iaxis, kwargs):
 
 
 def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
-                  kwargs={}, output_array=None):
+                  kwargs={}, output_array=None, verbose=True):
     '''
     Based on the dimensions of the given cube, and the dimensions
     of the blocks, return an appropriate dask output.
@@ -339,15 +339,19 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
 
             def_slice = [slice(None)] * len(cube.shape)
 
-        ct = 0
-        for slice in dask_slice_iterator(cube, blocks):
-            def_slice[0] = slice(ct, ct+1)
+        for chan, slice in dask_slice_iterator(cube, blocks):
+            if verbose:
+                print("On "+str(chan))
+            def_slice[0] = slice(chan, chan+1)
             output_array[def_slice] = \
                 slice.map_overlap(lambda a:
                                   operation(a, *args, **kwargs)).compute()
 
     else:
         dask_arr = da.from_array(cube.filled_data[:], blocks=blocks)
+
+        if verbose:
+            print("No channel iterations, so no print out.")
 
         output_array = \
             dask_arr.map_overlap(lambda a:
@@ -357,6 +361,6 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
 
 
 def dask_slice_iterator(cube, blocks):
-    for chan in range(len(spectral_axis)):
-        yield da.from_array(cube.filled_data[chan, :, :],
-                            blocks=blocks)
+    for chan in range(len(cube.spectral_axis)):
+        yield chan, da.from_array(cube.filled_data[chan, :, :],
+                                  blocks=blocks)
