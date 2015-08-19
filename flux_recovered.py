@@ -182,7 +182,8 @@ class MultiResObs(object):
             print("Convolving high resolution cube.")
 
         if use_dask:
-            highres_convolved = auto_dask_map(self.highres, blocks=block)
+            highres_convolved = auto_dask_map(self.highres, blocks=block,
+                                              args=[conv_kernel_high])
 
         # for chan in range(high_chans):
         #     if verbose:
@@ -232,7 +233,8 @@ class MultiResObs(object):
             print("Convolving low resolution cube.")
 
         if use_dask:
-            lowres_convolved = auto_dask_map(self.highres, blocks=block)
+            lowres_convolved = auto_dask_map(self.highres, blocks=block,
+                                             args=[conv_kernel_low])
 
         # for chan in range(low_chans):
         #     if verbose:
@@ -356,9 +358,13 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
         if verbose:
             print("No channel iterations, so no print out.")
 
+        # In the >2D case, map blocks to function in 2D planes
+
         output_array = \
-            dask_arr.map_blocks(lambda a:
-                                 operation(a, *args, **kwargs)).compute()
+            dask_arr.map_blocks(
+                lambda a: _map_flatten(convolve_fft,
+                                       a, args=args,
+                                       kwargs=kwargs)).compute()
 
     return output_array
 
@@ -367,3 +373,12 @@ def dask_slice_iterator(cube, blocks):
     for chan in range(len(cube.spectral_axis)):
         yield chan, da.from_array(cube.filled_data[chan, :, :],
                                   blocks)
+
+def _map_flatten(operation, arr, args=[], kwargs={}):
+
+    restore_slice = [slice(None)] * len(arr.shape)
+
+    for i in np.where(np.asarray(a.shape)==1)[0]:
+        restore_slice[i] = np.newaxis
+
+    return operation(arr.squeeze(), *args, **kwargs)[restore_slice]
