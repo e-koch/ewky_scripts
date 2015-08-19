@@ -378,7 +378,7 @@ def _map_flatten(operation, arr, args=[], kwargs={}):
 
     restore_slice = [slice(None)] * len(arr.shape)
 
-    for i in np.where(np.asarray(a.shape)==1)[0]:
+    for i in np.where(np.asarray(arr.shape)==1)[0]:
         restore_slice[i] = np.newaxis
 
     return operation(arr.squeeze(), *args, **kwargs)[restore_slice]
