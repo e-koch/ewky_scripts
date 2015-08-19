@@ -50,6 +50,8 @@ class MultiResObs(object):
         Match the spatial and spectral coordinates of the cubes.
         '''
 
+        # TODO: use Skycoords to convert extrema into the same frame
+
         # Are either of the cubes in the correct frame?
         if self.highres.header['CTYPE1'] != self.lowres.header['CTYPE1']:
             raise TypeError("ctypes do not match. Are observations in the "
