@@ -11,6 +11,7 @@ from astropy import units as u
 from astropy import wcs
 from FITS_tools.header_tools import wcs_to_platescale
 import matplotlib.pyplot as p
+from scipy.interpolate import interp1d
 import dask.array as da
 
 
@@ -252,10 +253,24 @@ class MultiResObs(object):
             SpectralCube(lowres_convolved*self.lowres.unit, self.lowres.wcs,
                          header=update_low_hdr)
 
-    def flux_recovered(self, plot=True, filename=None):
+    def flux_recovered(self, plot=True, filename=None, enable_interp=True,
+                       interp_to='lower'):
         '''
         Check the amount of flux recovered in the high resolution image versus
-        the low resolution data.
+        the low resolution data. If the spectral axes don't match, one is
+        interpolated onto the other.
+
+        Parameters
+        ----------
+        plot : bool, optional
+            Enable plotting.
+        filename : str, optional
+            Give filename for the plot save file. When specified, the plot
+            is automatically saved.
+        interp_to : 'lower' or 'upper', optional
+            If the spectral axes don't match, interpolated onto the same.
+            The default 'lower' interpolates to the spectral axis with the
+            lowest resolution.
         '''
 
         # Add up the total intensity in the cubes and compare
@@ -263,31 +278,54 @@ class MultiResObs(object):
         # doesn't dominate
 
         if self.highres_convolved is not None:
-            self.high_channel_intensity = \
+            high_channel_intensity = \
                 self.highres_convolved.sum(axis=(1, 2))
         else:
-            self.high_channel_intensity = self.highres.sum(axis=(1, 2))
+            high_channel_intensity = self.highres.sum(axis=(1, 2))
             Warning("Should run convolve_to_common before. Using unconvolved"
                     " cube.")
 
         if self.lowres_convolved is not None:
-            self.low_channel_intensity = self.lowres_convolved.sum(axis=(1, 2))
+            low_channel_intensity = self.lowres_convolved.sum(axis=(1, 2))
         else:
-            self.low_channel_intensity = self.lowres.sum(axis=(1, 2))
+            low_channel_intensity = self.lowres.sum(axis=(1, 2))
             Warning("Should run convolve_to_common before. Using unconvolved"
                     " cube.")
 
+        # If the spectral axes are not the same, try interpolating to match
+        if enable_interp:
+
+            better_vres_high = \
+                np.abs(self.lowres.header['CDELT3']) > \
+                np.abs(self.highres.header['CDELT3'])
+
+            # Invert which to interpolate to
+            if interp_to == "higher":
+                better_vres_high = not better_vres_high
+
+            if better_vres_high:
+                f = interp1d(self.highres.spectral_axis.value,
+                             high_channel_intensity.value)
+                high_channel_intensity = f(self.lowres.spectral_axis.value) *\
+                    self.highres.unit
+            else:
+                f = interp1d(self.lowres.spectral_axis.value,
+                             low_channel_intensity.value)
+                low_channel_intensity = f(self.highres.spectral_axis.value) *\
+                    self.lowres.unit
+
+
         self.fraction_flux_recovered = \
-            self.high_channel_intensity.sum()/self.low_channel_intensity.sum()
+            high_channel_intensity.sum()/low_channel_intensity.sum()
 
         if plot:
             p.plot(self.highres.spectral_axis.value,
-                   self.high_channel_intensity.value)
+                   high_channel_intensity.value)
 
             p.plot(self.lowres.spectral_axis.value,
-                   self.low_channel_intensity.value)
+                   low_channel_intensity.value)
 
-            p.xlabel("Spectral Axis (+"+self.highres.spectral_axis.unit.to_string()+")")
+            p.xlabel("Spectral Axis ("+self.highres.spectral_axis.unit.to_string()+")")
             p.ylabel("Intensity ("+self.highres.unit.to_string()+")")
 
             if filename is None:
