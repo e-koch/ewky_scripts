@@ -306,14 +306,14 @@ class MultiResObs(object):
                 better_vres_high = not better_vres_high
 
             if better_vres_high:
-                f = interp1d(self.highres.spectral_axis.value,
+                f = interp1d(np.round(self.highres.spectral_axis.value, 3),
                              high_channel_intensity.value)
-                high_channel_intensity = f(self.lowres.spectral_axis.value) *\
+                high_channel_intensity = f(np.round(self.lowres.spectral_axis.value, 3)) *\
                     self.highres.unit
             else:
-                f = interp1d(self.lowres.spectral_axis.value,
+                f = interp1d(np.round(self.lowres.spectral_axis.value, 3),
                              low_channel_intensity.value)
-                low_channel_intensity = f(self.highres.spectral_axis.value) *\
+                low_channel_intensity = f(np.round(self.highres.spectral_axis.value, 3)) *\
                     self.lowres.unit
 
 
