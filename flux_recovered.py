@@ -13,6 +13,7 @@ from FITS_tools.header_tools import wcs_to_platescale
 import matplotlib.pyplot as p
 from scipy.interpolate import interp1d
 import dask.array as da
+import warnings
 
 
 class MultiResObs(object):
@@ -256,7 +257,7 @@ class MultiResObs(object):
                          header=update_low_hdr)
 
     def flux_recovered(self, plot=True, filename=None, enable_interp=True,
-                       interp_to='lower'):
+                       interp_to='lower', diff_tol=1e-4*u.m/u.s):
         '''
         Check the amount of flux recovered in the high resolution image versus
         the low resolution data. If the spectral axes don't match, one is
@@ -301,20 +302,33 @@ class MultiResObs(object):
                 np.abs(self.lowres.header['CDELT3']) > \
                 np.abs(self.highres.header['CDELT3'])
 
-            # Invert which to interpolate to
-            if interp_to == "higher":
-                better_vres_high = not better_vres_high
+            spec_diff = np.abs(np.abs(self.lowres.header['CDELT3']) -
+                               np.abs(self.highres.header['CDELT3']))
 
-            if better_vres_high:
-                f = interp1d(np.round(self.highres.spectral_axis.value, 3),
-                             high_channel_intensity.value)
-                high_channel_intensity = f(np.round(self.lowres.spectral_axis.value, 3)) *\
-                    self.highres.unit
+            spec_unit = self.highres.spectral_axis.unit
+
+            if spec_diff * spec_unit < diff_tol:
+                warnings.warn("Channels are essentially the same. "
+                              "Skipping interpolation. Lower diff_tol"
+                              " to re-enable interpolation.")
+
             else:
-                f = interp1d(np.round(self.lowres.spectral_axis.value, 3),
-                             low_channel_intensity.value)
-                low_channel_intensity = f(np.round(self.highres.spectral_axis.value, 3)) *\
-                    self.lowres.unit
+                # Invert which to interpolate to
+                if interp_to == "higher":
+                    better_vres_high = not better_vres_high
+
+                if better_vres_high:
+                    f = interp1d(np.round(self.highres.spectral_axis.value, 3),
+                                 high_channel_intensity.value)
+                    high_channel_intensity = \
+                        f(np.round(self.lowres.spectral_axis.value, 3)) *\
+                        self.highres.unit
+                else:
+                    f = interp1d(np.round(self.lowres.spectral_axis.value, 3),
+                                 low_channel_intensity.value)
+                    low_channel_intensity = \
+                        f(np.round(self.highres.spectral_axis.value, 3)) *\
+                        self.lowres.unit
 
 
         self.fraction_flux_recovered = \
