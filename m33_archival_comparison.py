@@ -49,15 +49,13 @@ chan_fig.close()
 # Now create good masks and derive 0th moments.
 
 
-new_beam = Beam.from_fits_header(cube.header)
-noise_cube = Noise(cube, beam=new_beam)
+noise_cube = Noise(cube)
 
 new_noise = noise_cube.scale
 
 cube = cube.with_mask(cube > new_noise*u.Jy)
 
-old_beam = Beam.from_fits_header(old_cube.header)
-old_noise_cube = Noise(old_cube, beam=old_beam)
+old_noise_cube = Noise(old_cube)
 
 old_noise = old_noise_cube.scale
 
