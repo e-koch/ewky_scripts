@@ -62,6 +62,35 @@ else:
     ax.set_ylabel('HI Surface Brightness (K)')
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
+
+    # Fill in HISA regions b/w spectra
+
+    co21_min = co21_cube.spectral_axis[10]
+    co21_mid = co21_cube.spectral_axis[9]
+    co21_max = co21_cube.spectral_axis[8]
+
+    hi_posn_min = hi_cube.closest_spectral_channel(co21_min)+1
+    hi_posn_mid = hi_cube.closest_spectral_channel(co21_mid)
+    hi_posn_max = hi_cube.closest_spectral_channel(co21_max)-1
+
+    # co21_fillbetween = np.empty((hi_posn_min-hi_posn_max,))
+
+    # co21_fillbetween[:hi_posn_mid-hi_posn_max] = co21_spectrum.value[9]
+    # co21_fillbetween[hi_posn_mid-hi_posn_max:] = co21_spectrum.value[10]
+
+    # y1 = hi_spectrum.value[hi_posn_max:hi_posn_min]
+    # y2 = co21_fillbetween * 525  # scale between ax and ax_2
+
+    # ax.fill_between(hi_spectrum.spectral_axis[hi_posn_max:hi_posn_min]/1000.,
+    #                 y1, y2, where=y2 >= y1, facecolor='k', interpolate=False,
+    #                 alpha=0.25)
+
+    y1 = np.array([-10]*27)
+    y2 = np.array([50]*27)
+
+    ax.fill_between(hi_spectrum.spectral_axis[hi_posn_max:hi_posn_min]/1000.,
+                    y1, y2, where=y2 >= y1, facecolor='k', alpha=0.25)
+
     ax_2 = ax.twinx()
     ax_2.plot(co21_spectrum.spectral_axis/1000., co21_spectrum.value, 'g',
               drawstyle='steps')
