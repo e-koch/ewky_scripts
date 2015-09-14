@@ -55,13 +55,15 @@ if plot_posns:
     ax = p.subplot(131)
 else:
     ax = p.subplot(111)
-    ax.plot(hi_spectrum.spectral_axis/1000., hi_spectrum.value)
+    ax.plot(hi_spectrum.spectral_axis/1000., hi_spectrum.value,
+            drawstyle='steps')
     ax.set_xlabel('Velocity (km/s)')
     ax.set_ylabel('HI Surface Brightness (K)')
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
     ax_2 = ax.twinx()
-    ax_2.plot(co21_spectrum.spectral_axis/1000., co21_spectrum.value, 'g')
+    ax_2.plot(co21_spectrum.spectral_axis/1000., co21_spectrum.value, 'g',
+              drawstyle='steps')
     ax_2.set_ylabel('CO(2-1) Surface Brightness (K)')
 
 if plot_posns:
