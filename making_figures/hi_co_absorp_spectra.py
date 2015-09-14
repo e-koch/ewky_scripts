@@ -24,7 +24,7 @@ hi_cube = hi_cube.subcube(xlo=long_extrema[1],
 # Now find the position in each cube corresponding to a given
 # coordinate
 
-posn = SkyCoord("1h33m14.905", "+30d33m17.479", frame='icrs')
+posn = SkyCoord("01h33m21.287", "+30d32m16.110", frame='icrs')
 
 
 def get_closest_posn(posn, spatial_footprint):
@@ -54,6 +54,7 @@ plot_posns = False
 if plot_posns:
     ax = p.subplot(131)
 else:
+    p.figure(figsize=(8, 4))
     ax = p.subplot(111)
     ax.plot(hi_spectrum.spectral_axis/1000., hi_spectrum.value,
             drawstyle='steps')
@@ -79,5 +80,7 @@ if plot_posns:
                   slice(co21_posn[1]-30, co21_posn[1]+30)]
     p.imshow(co21_mom0[co21_slice], origin='lower')
     p.scatter([30], [30], c='r', s=40)
+
+p.tight_layout()
 
 # p.savefig("hi_co_overlay_"+new_coord.to_string('hmsdms').replace(' ', '_')+".pdf")
