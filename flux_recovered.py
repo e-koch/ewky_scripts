@@ -403,8 +403,8 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
                 print("On "+str(chan))
             def_slice[0] = slice(chan, chan+1)
             output_array[def_slice] = \
-                cube_slice.map_overlap(lambda a:
-                                       operation(a, *args, **kwargs)).compute()
+                cube_slice.map_blocks(lambda a:
+                                      operation(a, *args, **kwargs)).compute()
 
     else:
         dask_arr = da.from_array(cube.filled_data[:], blocks)
@@ -416,7 +416,7 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
 
         output_array = \
             dask_arr.map_blocks(
-                lambda a: _map_flatten(convolve_fft,
+                lambda a: _map_flatten(operation,
                                        a, args=args,
                                        kwargs=kwargs)).compute()
 
