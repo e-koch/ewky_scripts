@@ -398,13 +398,13 @@ def auto_dask_map(cube, operation=convolve_fft, blocks=None, args=[],
 
             def_slice = [slice(None)] * len(cube.shape)
 
-        for chan, slice in dask_slice_iterator(cube, blocks):
+        for chan, cube_slice in dask_slice_iterator(cube, blocks):
             if verbose:
                 print("On "+str(chan))
             def_slice[0] = slice(chan, chan+1)
             output_array[def_slice] = \
-                slice.map_overlap(lambda a:
-                                  operation(a, *args, **kwargs)).compute()
+                cube_slice.map_overlap(lambda a:
+                                       operation(a, *args, **kwargs)).compute()
 
     else:
         dask_arr = da.from_array(cube.filled_data[:], blocks)
