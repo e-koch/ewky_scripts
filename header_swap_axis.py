@@ -17,8 +17,8 @@ def header_swapaxes(header, ax1, ax2):
     lost_keys = list(set(header.keys()) - set(new_hdr.keys()))
 
     for key in lost_keys:
-        # CASA sometimes gives empty keys? ""
-        if len(key) == 0:
+        # Drop COMMENT, HISTORY, "" for now as they are a pain
+        if key == "" or key == "COMMENT" or key == "HISTORY":
             continue
 
         if str(ax1+1) in key:
