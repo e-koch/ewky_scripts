@@ -1,21 +1,91 @@
-#!/usr/bin/python
 
-
-from utilities import *
 import numpy as np
+import skimage.morphology as mo
+import skimage.measure as me
+from skimage.segmentation import find_boundaries
 
 
-'''
-Routines for calculating the Menger Curvature of filaments
-**The active versions of these routines are in length.py.**
-Contains:
-    curve
-    av_curvature
+def edge_curvature(mask, min_sep=5, average_over=3):
+    '''
+    Compute the menger curvature along the edges of the contours in the mask.
+    '''
 
-Requires:
-    numpy
+    labels = me.label(mask, neighbors=8, connectivity=2)
 
-'''
+    edges = find_boundaries(labels, connectivity=2, mode='outer')
+
+    pts = integer_boundaries(mask, edges, 0.5)
+
+    curvature_mask = np.zeros_like(mask, dtype=float)
+
+    for cont_pts in pts:
+        # Last one is a duplicate
+        cont_pts = cont_pts[:-1]
+
+        num = cont_pts.shape[0]
+
+        for i in xrange(num):
+
+            curv = 0.0
+            for j in xrange(min_sep, min_sep+average_over+1):
+                curv += menger_curvature(cont_pts[i-j], cont_pts[i],
+                                         cont_pts[(i+j) % num])
+
+            y, x = cont_pts[i]
+
+            if np.isnan(curv):
+                curv = 0.0
+            curvature_mask[y, x] = curv / average_over
+
+    return curvature_mask
+
+
+def menger_curvature(pt1, pt2, pt3, atol=1e-3):
+
+    vec21 = np.array([pt1[0]-pt2[0], pt1[1]-pt2[1]])
+    vec23 = np.array([pt3[0]-pt2[0], pt3[1]-pt2[1]])
+
+    norm21 = np.linalg.norm(vec21)
+    norm23 = np.linalg.norm(vec23)
+
+    theta = np.arccos(np.dot(vec21, vec23)/(norm21*norm23))
+    if np.isclose(theta-np.pi, 0.0, atol=atol):
+        theta = 0.0
+
+    dist13 = np.linalg.norm(vec21-vec23)
+
+    return 2*np.sin(theta) / dist13
+
+
+def integer_boundaries(mask, edges, level):
+    '''
+    Return the non-interpolated contour boundaries.
+    '''
+
+    all_pts = me.find_contours(mask, 0.5)
+
+    int_pts = []
+
+    for pts in all_pts:
+        new_int_pts = np.zeros_like(pts, dtype=int)
+
+        for i, pt in enumerate(pts):
+            y, x = pt
+
+            ceil = (np.ceil(y).astype(int), np.ceil(x).astype(int))
+            floor = (np.floor(y).astype(int), np.floor(x).astype(int))
+
+            if edges[ceil]:
+                new_int_pts[i] = np.array(ceil)
+            elif edges[floor]:
+                new_int_pts[i] = np.array(floor)
+            else:
+                raise IndexError("Cannot find pixel in mask for " +
+                                 str(pt))
+
+        int_pts.append(new_int_pts)
+
+    return int_pts
 
 
 def curve(n, pts):
@@ -117,8 +187,3 @@ def av_curvature(n, finalpix, ra_picks=100, seed=500):
         else:
             curvature.append("Fail")
     return curvature
-
-
-if __name__ == "__main__":
-    import sys
-    fib(int(sys.argv[1]))
