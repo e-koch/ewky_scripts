@@ -88,6 +88,25 @@ def integer_boundaries(mask, edges, level):
     return int_pts
 
 
+def circle_center(pt1, pt2, pt3):
+    '''
+    Find the center of the circle through 3 points.
+    '''
+
+    norm12 = np.linalg.norm(pt1-pt2)
+    norm13 = np.linalg.norm(pt1-pt3)
+    norm23 = np.linalg.norm(pt3-pt2)
+
+    b1 = norm23**2 * (norm13**2 + norm12**2 - norm23**2)
+    b2 = norm13**2 * (norm23**2 + norm12**2 - norm13**2)
+    b3 = norm12**2 * (norm23**2 + norm13**2 - norm12**2)
+
+    P = np.vstack([pt1, pt2, pt3]).T.dot(np.vstack([b1, b2, b3]))
+    P /= b1 + b2 + b3
+
+    return P
+
+
 def curve(n, pts):
     '''
     The average curvature of the filament is found using the Menger curvature.
