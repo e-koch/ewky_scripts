@@ -152,3 +152,27 @@ def analyze_skeletons(skeleton, relintens_thresh=0.2, imgscale=1.,
                             1, verbose=True)
 
     return lengths, skeleton, skeleton_longpath
+
+
+if __name__ == "__main__":
+
+    from astropy.io import fits
+    import os
+    from scipy.ndimage import median_filter
+    import skimage.morphology as mo
+    import matplotlib.pyplot as p
+
+    mask = fits.getdata(os.path.join(os.path.expanduser("~"),
+                                     "Downloads/test_skel.fits")).astype(bool)
+
+    smoothed = median_filter(mask, 3)
+
+    filled_holes = isolateregions(smoothed, fill_hole=True, rel_size=0.1)[0][0]
+
+    props = analyze_skeletons(mo.medial_axis(filled_holes), skel_thresh=10,
+                              branch_thresh=5)
+
+    p.imshow(filled_holes, origin='lower')
+    p.contour(props[1], colors='b')
+    p.contour(props[2], colors='r')
+    p.show()
