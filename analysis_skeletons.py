@@ -5,7 +5,7 @@ General skeleton analysis
 
 import numpy as np
 
-from fil_finder.pixel_ident import pix_identify, extremum_pts, \
+from fil_finder.pixel_ident import pix_identify, \
     make_final_skeletons, recombine_skeletons, isolateregions
 from fil_finder.length import init_lengths, pre_graph, \
     longest_path, prune_graph, main_length
@@ -64,27 +64,14 @@ def analyze_skeletons(skeleton, relintens_thresh=0.2, imgscale=1.,
     save_png : bool, optional
         Saves the plot made in verbose mode. Disabled by default.
 
-    Attributes
-    ----------
-    filament_arrays : list of numpy.ndarray
-        Contains individual arrays of each skeleton
-    number_of_filaments : int
-        The number of individual filaments.
-    array_offsets : list
-        A list of coordinates for each filament array.This will
-        be used to recombine the final skeletons into one array.
-    filament_extents : list
-        This contains the coordinates of the initial and final
-        position of the skeleton's extent. It may be used to
-        test the performance of the shortest path algorithm.
-    lengths : list
-        Contains the overall lengths of the skeletons
-    labeled_fil_arrays : list of numpy.ndarray
-        Contains the final labeled versions of the skeletons.
-    branch_properties : dict
-        The significant branches of the skeletons have their length
-        and number of branches in each skeleton stored here.
-        The keys are: *filament_branches*, *branch_lengths*
+    Returns
+    -------
+    lengths : np.ndarray
+        Longest path lengths through the skeletons.
+    skeleton : np.ndarray
+        Pruned skeletons
+    skeleton_longpath : np.ndarray
+        Longest path skeletons
 
     '''
 
@@ -133,9 +120,6 @@ def analyze_skeletons(skeleton, relintens_thresh=0.2, imgscale=1.,
     labeled_fil_arrays, edge_list, nodes, branch_properties = \
         updated_lists
 
-    filament_extents = \
-        extremum_pts(labeled_fil_arrays, extremum, ends)
-
     length_output = main_length(max_path, edge_list, labeled_fil_arrays,
                                 interpts,
                                 branch_properties["length"], imgscale,
@@ -167,4 +151,4 @@ def analyze_skeletons(skeleton, relintens_thresh=0.2, imgscale=1.,
                             offsets, skeleton.shape,
                             1, verbose=True)
 
-    return lengths, skeleton, skeleton_longpath, filament_extents
+    return lengths, skeleton, skeleton_longpath
