@@ -91,6 +91,11 @@ def analyze_skeletons(skeleton, relintens_thresh=0.2, imgscale=1.,
         isolateregions(skeleton, size_threshold=skel_thresh,
                        pad_size=2, fill_hole=False)
 
+    # Check to make sure there is at least one valid skeleton to work with
+    if not bool(isolateregions):
+        raise IndexError("Could not identify any valid skeletons based on"
+                         " the given skel_thresh.")
+
     interpts, hubs, ends, filbranches, labeled_fil_arrays =  \
         pix_identify(isolated_filaments, num)
 
