@@ -92,7 +92,7 @@ def analyze_skeletons(skeleton, relintens_thresh=0.2, imgscale=1.,
                        pad_size=2, fill_hole=False)
 
     # Check to make sure there is at least one valid skeleton to work with
-    if not bool(isolateregions):
+    if not isolated_filaments:
         raise IndexError("Could not identify any valid skeletons based on"
                          " the given skel_thresh.")
 
