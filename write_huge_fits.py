@@ -71,3 +71,32 @@ def create_huge_fits(shape, filename, header=None, nblocks=4):
     with open(filename, 'rb+') as fobj:
         fobj.seek(len(hdr.tostring()) + (8 * nelements) - 1)
         fobj.write('\0')
+
+
+def write_huge_fits(cube, filename):
+    '''
+    Write a SpectralCube to a massive FITS file. Currently only 3D objects
+    will work. A more general approach where the longest axis is iterated over
+    is probably a good idea.
+
+    cube : np.ndarray or SpectralCube
+        Data to be written.
+
+    filename : str
+        Name of the FITS file to write to. If it does not already exist,
+        `create_huge_fits` is called first to create an empty FITS file.
+    '''
+
+    if not os.path.exists(filename):
+        create_huge_fits(cube.shape, filename, header=cube.header)
+
+    # Open the FITS and write the values out channel-by-channel
+    hdu = fits.open(filename, mode='update')
+
+    nchans = cube.shape[0]
+
+    for i in range(nchans):
+        hdu[0].data[i, :, :] = cube[i, :, :]
+        hdu.flush()
+
+    hdu.close()
