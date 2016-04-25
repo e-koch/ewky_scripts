@@ -4,6 +4,7 @@ Save massive FITS files.
 '''
 
 from astropy.io import fits
+from astropy.utils.console import ProgressBar
 import numpy as np
 import functools
 import operator
@@ -53,14 +54,15 @@ def create_huge_fits(shape, filename, header=None, nblocks=4):
     hdu = fits.PrimaryHDU(data=inp_data)
 
     hdr = hdu.header
+
     while len(hdr) < (36 * nblocks - 1):
         hdr.append()
 
     # Set the actual shape in the header
     hdr["NAXIS"] = naxis
 
-    for axis in range(1, naxis+1):
-        hdr["NAXIS"+str(axis)] = shape[naxis-axis]
+    for axis in range(1, naxis + 1):
+        hdr["NAXIS" + str(axis)] = shape[naxis - axis]
 
     # Save the header
     filename = os.path.splitext(filename)[0] + ".fits"
@@ -73,7 +75,7 @@ def create_huge_fits(shape, filename, header=None, nblocks=4):
         fobj.write('\0')
 
 
-def write_huge_fits(cube, filename):
+def write_huge_fits(cube, filename, verbose=True):
     '''
     Write a SpectralCube to a massive FITS file. Currently only 3D objects
     will work. A more general approach where the longest axis is iterated over
@@ -95,8 +97,17 @@ def write_huge_fits(cube, filename):
 
     nchans = cube.shape[0]
 
-    for i in range(nchans):
+    if verbose:
+        iterat = ProgressBar(nchans)
+    else:
+        iterat = xrange(nchans)
+
+    for i in iterat:
         hdu[0].data[i, :, :] = cube[i, :, :]
         hdu.flush()
+
+    # And write the header
+    hdu[0].header = cube.header
+    hdu.flush()
 
     hdu.close()
