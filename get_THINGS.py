@@ -27,7 +27,7 @@ files = soup.findAll(href=re.compile(fits_reg))
 
 full_files = [os.path.join(base, f['href']) for f in files]
 
-output_dir = "/media/eric/Data_3/THINGS/"
+output_dir = "/media/eric/Data_3/VLA/THINGS/"
 
 download_list_of_fitsfiles(full_files, output_directory=output_dir,
                            verbose=True, save=True, overwrite=False)
@@ -48,6 +48,9 @@ for f in saved_files:
     # If we haven't gotten to this galaxy yet, make a new folder
     if not os.path.exists(folder_name):
         os.mkdir(folder_name)
+
+    # There's an extra _ in front for some reason??
+    shutil.move("_"+f, f)
 
     # Now move that file
     shutil.move(f, folder_name)
