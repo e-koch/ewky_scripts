@@ -8,7 +8,8 @@ import shutil
 from astroquery.utils import download_list_of_fitsfiles
 
 '''
-When you want the THINGS data, but don't want to click on every link (and wait...)
+When you want the THINGS data, but don't want to click on every link
+(and wait...)
 '''
 
 # base = ("https://bulk.cv.nrao.edu/littlethings/")
@@ -29,11 +30,17 @@ full_files = [os.path.join(base, f['href']) for f in files]
 
 output_dir = "/media/eric/Data_3/VLA/THINGS/"
 
-download_list_of_fitsfiles(full_files, output_directory=output_dir,
-                           verbose=True, save=True, overwrite=False)
+while True:
+    try:
+        download_list_of_fitsfiles(full_files, output_directory=output_dir,
+                                   verbose=True, save=True, overwrite=False)
+        break
+    except urllib2.URLError:
+        pass
 
 # Now let's go through them and sort into a reasonable folder structure
-saved_files = [os.path.join(output_dir, f['href'].split("/")[1]) for f in files]
+saved_files = [os.path.join(output_dir, f['href'].split("/")[1]) for f in
+               files]
 
 for f in saved_files:
     if "_NA_" in f:
@@ -50,7 +57,7 @@ for f in saved_files:
         os.mkdir(folder_name)
 
     # There's an extra _ in front for some reason??
-    shutil.move("_"+f, f)
+    shutil.move("_" + f, f)
 
     # Now move that file
     shutil.move(f, folder_name)
