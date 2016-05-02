@@ -4,6 +4,7 @@ import urllib2
 import re
 import os
 import shutil
+import glob
 
 from astroquery.utils import download_list_of_fitsfiles
 
@@ -31,6 +32,21 @@ full_files = [os.path.join(base, f['href']) for f in files]
 output_dir = "/media/eric/Data_3/VLA/THINGS/"
 
 while True:
+
+    # Go through the list and find which have already been downloaded
+    downloaded = glob.glob(os.path.join(output_dir, "*.FITS"))
+
+    remove = []
+    for f in downloaded:
+        name = f.split("/")[-1].lstrip("_")
+
+        for l in full_files:
+            if name in l:
+                remove.append(l)
+                break
+
+    full_files = list(set(full_files) - set(remove))
+
     try:
         download_list_of_fitsfiles(full_files, output_directory=output_dir,
                                    verbose=True, save=True, overwrite=False)
