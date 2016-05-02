@@ -62,7 +62,7 @@ for f in saved_files:
     if "_NA_" in f:
         name = f.split("_NA_")[0]
     elif "_RO_" in f:
-        name = f.split("_NA_")[0]
+        name = f.split("_RO_")[0]
     else:
         print(f + "has no NA or RO?? Skipping.")
 
@@ -73,7 +73,9 @@ for f in saved_files:
         os.mkdir(folder_name)
 
     # There's an extra _ in front for some reason??
-    shutil.move("_" + f, f)
+    os.rename(os.path.join("/".join(f.split("/")[:-1]),
+                           "_" + f.split("/")[-1]),
+              f)
 
     # Now move that file
     shutil.move(f, folder_name)
