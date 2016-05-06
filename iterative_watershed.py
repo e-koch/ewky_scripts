@@ -14,37 +14,62 @@ except ImportError:
     CV2_FLAG = False
 
 
-def iterative_watershed(array, scale, start_value=5, end_value=3,
-                        delta_value=1, mask_below=2):
+def iterative_watershed(array, scale, start_value=5., end_value=3.,
+                        delta_value=1., mask_below=2., min_pix=0):
     '''
     Iterative Watershed algorithm.
     '''
 
     initial_mask = array >= mask_below
 
-    # initial_mask = remove_spurs(initial_mask, scale)
+    if array.ndim == 3:
+        # Define a footprint to use in the peak finding
+        footprint = np.tile(mo.disk(scale), (array.shape[0], 1, 1))
+        use_footprint = True
+        initial_peaks = peak_local_max(array, footprint=footprint,
+                                       threshold_abs=start_value,
+                                       exclude_border=False)
 
-    initial_peaks = peak_local_max(array, min_distance=scale,
-                                   threshold_abs=start_value)
+        initial_markers = np.zeros_like(array, dtype=bool)
+        initial_markers[:, initial_peaks[:, 1], initial_peaks[:, 2]] = True
 
-    initial_markers = np.zeros_like(array, dtype=bool)
-    initial_markers[initial_peaks[:, 0], initial_peaks[:, 1]] = True
+    elif array.ndim == 2:
+        initial_peaks = peak_local_max(array, min_distance=scale,
+                                       threshold_abs=start_value)
+        use_footprint = False
+
+        initial_markers = np.zeros_like(array, dtype=bool)
+        initial_markers[initial_peaks[:, 0], initial_peaks[:, 1]] = True
+    else:
+        raise Exception("Function only implemented for 2D and 3D arrays.")
+
+    initial_markers *= initial_mask
 
     wshed_input = -array.copy()
     wshed_input[wshed_input > 0] = 0
 
     labels = mo.watershed(wshed_input, me.label(initial_markers),
-                          mask=wshed_input < -2)
+                          mask=initial_mask)
+
+    initial_markers *= labels > 0
 
     # Now decrease the local maxima, trying to subdivide
     # regions that had a peak at the higher level.
+    if start_value - end_value < delta_value:
+        return labels, np.vstack(np.where(initial_markers)).T
+
     peak_levels = \
-        np.arange(start_value-delta_value,
-                  end_value-delta_value, -1*delta_value)
+        np.arange(start_value - delta_value,
+                  end_value - delta_value, - 1 * delta_value)
+
     for value in peak_levels:
-        new_peaks = peak_local_max(array, min_distance=scale,
-                                   threshold_abs=value)
-        print(new_peaks)
+        if use_footprint:
+            new_peaks = peak_local_max(array, footprint=footprint,
+                                       threshold_abs=value,
+                                       exclude_border=False)
+        else:
+            new_peaks = peak_local_max(array, min_distance=scale,
+                                       threshold_abs=value)
         markers = initial_markers.copy()
         markers[new_peaks[:, 0], new_peaks[:, 1]] = True
 
@@ -53,21 +78,40 @@ def iterative_watershed(array, scale, start_value=5, end_value=3,
 
         # Search for label regions that now have multiple peaks
         # and re-run the watershed on them
-        for lab in range(1, labels.max()+1):
-            num_peaks = np.sum(markers*(labels == lab))
-            print(lab, num_peaks)
+        for lab in range(1, labels.max() + 1):
+            num_peaks = np.sum(markers * (labels == lab))
             if num_peaks == 1:
                 continue
             elif num_peaks == 0:
                 raise Exception("No peaks found??")
             else:
-                split_marker = me.label(markers*(labels == lab))
+                split_marker = me.label(markers * (labels == lab))
                 split_label = mo.watershed(wshed_input, split_marker,
                                            mask=labels == lab)
-                for lab2 in range(2, split_label.max()+1):
-                    labels[np.where(split_label == lab2)] = labels.max() + 1
+                orig_used = False
+                for lab2 in range(1, split_label.max() + 1):
+                    posns = np.where(split_label == lab2)
+                    if array[posns].max() >= start_value:
+                        if not orig_used:
+                            labels[posns] = lab
+                            orig_used = True
+                        else:
+                            labels[posns] = labels.max() + 1
+                    else:
+                        labels[posns] = 0
 
-    return labels
+    # Remove small regions
+    pix = nd.sum(labels > 0, labels, range(1, labels.max() + 1))
+    for i in xrange(labels.max()):
+        if pix[i] < min_pix:
+            labels[labels == i + 1] = 0
+
+    markers *= labels > 0
+
+    # Return only the peaks that were used.
+    final_peaks = np.vstack(np.where(markers)).T
+
+    return labels, final_peaks
 
 
 def remove_spurs(mask, min_distance=9):
