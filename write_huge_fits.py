@@ -11,7 +11,7 @@ import operator
 import os
 
 
-def create_huge_fits(shape, filename, header=None, nblocks=4):
+def create_huge_fits(shape, filename, header=None, nblocks=4, dtype=np.float32):
     '''
     Creates a massive empty FITS file that can be then written to
     in slice (or something that doesn't require reading it all in).
@@ -48,7 +48,7 @@ def create_huge_fits(shape, filename, header=None, nblocks=4):
 
     # Create an array with the right number of dimensions.
 
-    inp_data = np.zeros((100, ) * naxis, dtype=np.float64)
+    inp_data = np.zeros((100, ) * naxis, dtype=dtype)
 
     # Make hdu and pad header with enough header blocks
     hdu = fits.PrimaryHDU(data=inp_data)
