@@ -11,7 +11,8 @@ import operator
 import os
 
 
-def create_huge_fits(shape, filename, header=None, nblocks=4, dtype=np.float32):
+def create_huge_fits(shape, filename, header=None, nblocks=4,
+                     dtype=float):
     '''
     Creates a massive empty FITS file that can be then written to
     in slice (or something that doesn't require reading it all in).
@@ -37,7 +38,7 @@ def create_huge_fits(shape, filename, header=None, nblocks=4, dtype=np.float32):
             shape = []
 
             for axis in range(naxis, 0, -1):
-                shape.append(header["NAXIS"+str(axis)])
+                shape.append(header["NAXIS" + str(axis)])
 
             shape = tuple(shape)
         except KeyError:
