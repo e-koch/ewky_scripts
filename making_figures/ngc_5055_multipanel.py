@@ -98,3 +98,37 @@ for i in range(Nrows):
 
 p.subplots_adjust(hspace=0,
                   wspace=0)
+
+raw_input("Next plot?")
+p.clf()
+
+# Hi moment 0 and moment1
+
+fig, ax = p.subplots(1, 2,
+                     sharex=True,
+                     sharey=True, num=1)
+
+ax[0].imshow(data["HI"].data.squeeze(), origin='lower', cmap='afmhot')
+ax[0].yaxis.set_ticks_position('none')
+p.setp(ax[0].get_yticklabels(), visible=False)
+ax[0].yaxis.set_ticklabels([])
+ax[0].xaxis.set_ticks_position('none')
+p.setp(ax[0].get_xticklabels(), visible=False)
+ax[0].xaxis.set_ticklabels([])
+# ax[0].annotate("Moment 0", (0.7, 0.9),
+#                xycoords='axes fraction', color='k',
+#                fontsize=15.5)
+
+mom1 = fits.open("/media/eric/Data_3/VLA/THINGS/NGC_5055/NGC_5055_NA_MOM1_THINGS.FITS")[0]
+ax[1].imshow(mom1.data.squeeze(), origin='lower', cmap='seismic')
+ax[1].yaxis.set_ticks_position('none')
+p.setp(ax[1].get_yticklabels(), visible=False)
+ax[1].yaxis.set_ticklabels([])
+ax[1].xaxis.set_ticks_position('none')
+p.setp(ax[1].get_xticklabels(), visible=False)
+ax[1].xaxis.set_ticklabels([])
+# ax[1].annotate("Moment 1", (0.7, 0.9),
+#                xycoords='axes fraction', color='k',
+#                fontsize=15.5)
+
+p.tight_layout()
