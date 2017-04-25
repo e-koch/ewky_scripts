@@ -15,6 +15,6 @@ cortest <- function(my.data, a, b, c, n.iter=500) {
     z <- d[, 3]; z[i] <- d[i, 2]
     stat(x, y, z)                 #   Compute the test statistic
   })
-  p.value <- mean(c(s, sim) >= s) # Find the estimated p-value
+  p.value <- sum(sim >= s) / s # Find the estimated p-value
   return(list(stat=s, p.value=p.value, sim=sim))
 }
