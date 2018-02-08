@@ -44,7 +44,7 @@ true_D = 2.36e5 * D.unit
 
 frac_diff = 100 * np.abs(D.value - true_D.value) / true_D.value
 
-print("Fraction difference: {}".format(frac_diff))
+print("Fraction difference: {}%".format(frac_diff))
 # Off by ~0.5%! Success!
 
 # Now what's the conversion factor if we don't go back to Jy and stay in K.
