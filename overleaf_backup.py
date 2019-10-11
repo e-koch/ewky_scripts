@@ -4,6 +4,13 @@ Backup all overleaf projects locally.
 Use a git clone to the backup and then loop through pulling.
 
 Adapted from https://github.com/tdurieux/overleaf-backup/blob/master/overleaf_backup.py
+
+To run this, you need:
+(1) Change the output script.
+(2) Save your email and password for overleaf with git-credentials (https://stackoverflow.com/questions/35942754/how-to-save-username-and-password-in-git).
+(3) Clone one project from overleaf to save the credentials (FYI, this will save your password in plain-text in .git-credentials)
+(4) Setup a cronjob with `crontab -e` to run the backup every so often.
+
 '''
 
 '''
